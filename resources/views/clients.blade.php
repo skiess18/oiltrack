@@ -8,14 +8,21 @@
     <div class="py-8">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
 
+            @if(session('success'))
+                <div class="mb-4 bg-green-500 text-white p-3 rounded">
+                    {{ session('success') }}
+                </div>
+            @endif
+
             <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
 
                 <div class="flex justify-between items-center mb-6">
                     <h1 class="text-2xl font-bold">Списък с обекти</h1>
 
-                    <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                    <a href="{{ route('clients.create') }}"
+                       class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
                         + Добави обект
-                    </button>
+                    </a>
                 </div>
 
                 <table class="w-full border-collapse">
@@ -24,31 +31,30 @@
                             <th class="text-left p-3">Име</th>
                             <th class="text-left p-3">Адрес</th>
                             <th class="text-left p-3">Телефон</th>
-                            <th class="text-left p-3">Последно събиране</th>
-                            <th class="text-left p-3">Литри</th>
+                            <th class="text-left p-3">Контакт</th>
+                            <th class="text-left p-3">Капацитет</th>
+                            <th class="text-left p-3">Бележки</th>
                         </tr>
                     </thead>
 
                     <tbody>
-
-                        <tr class="border-b">
-                            <td class="p-3">Ресторант При Иван</td>
-                            <td class="p-3">Пловдив</td>
-                            <td class="p-3">0888123456</td>
-                            <td class="p-3">01.07.2026</td>
-                            <td class="p-3">120 L</td>
-                        </tr>
-
-                        <tr class="border-b">
-                            <td class="p-3">Happy Grill</td>
-                            <td class="p-3">София</td>
-                            <td class="p-3">0888555444</td>
-                            <td class="p-3">03.07.2026</td>
-                            <td class="p-3">85 L</td>
-                        </tr>
-
+                        @forelse($clients as $client)
+                            <tr class="border-b">
+                                <td class="p-3">{{ $client->name }}</td>
+                                <td class="p-3">{{ $client->address }}</td>
+                                <td class="p-3">{{ $client->phone }}</td>
+                                <td class="p-3">{{ $client->contact_person }}</td>
+                                <td class="p-3">{{ $client->capacity }}</td>
+                                <td class="p-3">{{ $client->notes }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="text-center p-6">
+                                    Все още няма добавени обекти.
+                                </td>
+                            </tr>
+                        @endforelse
                     </tbody>
-
                 </table>
 
             </div>
