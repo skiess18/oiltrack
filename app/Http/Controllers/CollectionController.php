@@ -6,6 +6,7 @@ use App\Models\Client;
 use App\Models\Collection;
 use App\Models\RoutePlan;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class CollectionController extends Controller
 {
@@ -42,26 +43,82 @@ class CollectionController extends Controller
             'liters' => 'required|numeric|min:0',
             'price_per_liter' => 'required|numeric|min:0',
             'notes' => 'nullable|string',
+
             'route_id' => 'nullable|exists:route_plans,id',
+
+            'signature' => 'nullable|string',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
         ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Запис на подписа като PNG
+        |--------------------------------------------------------------------------
+        */
+
+        $signaturePath = null;
+
+        if (!empty($validated['signature'])) {
+
+            $image = str_replace(
+                'data:image/png;base64,',
+                '',
+                $validated['signature']
+            );
+
+            $image = str_replace(' ', '+', $image);
+
+            $fileName = 'signature_' . time() . '.png';
+
+            Storage::disk('public')->put(
+                'signatures/' . $fileName,
+                base64_decode($image)
+            );
+
+            $signaturePath = 'signatures/' . $fileName;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Запис на събирането
+        |--------------------------------------------------------------------------
+        */
 
         $collection = Collection::create([
-            'client_id'        => $client->id,
-            'collection_date'  => $validated['collection_date'],
-            'liters'           => $validated['liters'],
-            'price_per_liter'  => $validated['price_per_liter'],
-            'total_price'      => $validated['liters'] * $validated['price_per_liter'],
-            'notes'            => $validated['notes'] ?? null,
+
+            'client_id' => $client->id,
+
+            'collection_date' => $validated['collection_date'],
+
+            'liters' => $validated['liters'],
+
+            'price_per_liter' => $validated['price_per_liter'],
+
+            'total_price' => $validated['liters'] * $validated['price_per_liter'],
+
+            'notes' => $validated['notes'] ?? null,
+
+            'signature' => $signaturePath,
+
+            'latitude' => $validated['latitude'] ?? null,
+
+            'longitude' => $validated['longitude'] ?? null,
+
         ]);
 
-        // Ако събирането е част от маршрут
+        /*
+        |--------------------------------------------------------------------------
+        | Ако събирането е част от маршрут
+        |--------------------------------------------------------------------------
+        */
+
         if (!empty($validated['route_id'])) {
 
             $route = RoutePlan::find($validated['route_id']);
 
             if ($route) {
 
-                // Маркирай клиента като посетен
                 $route->clients()->updateExistingPivot(
                     $client->id,
                     [
@@ -69,7 +126,6 @@ class CollectionController extends Controller
                     ]
                 );
 
-                // Намери следващия непосетен клиент
                 $nextClient = $route->clients()
                     ->wherePivot('visited', false)
                     ->orderByPivot('position')
@@ -83,10 +139,8 @@ class CollectionController extends Controller
                             'success',
                             'Събирането беше записано успешно.'
                         );
-
                 }
 
-                // Ако няма останали клиенти
                 $route->update([
                     'status' => 'completed',
                 ]);
@@ -95,12 +149,17 @@ class CollectionController extends Controller
                     ->route('routes.show', $route)
                     ->with(
                         'success',
-                        'Маршрутът беше завършен успешно.'
+                        '🎉 Маршрутът беше завършен успешно.'
                     );
             }
         }
 
-        // Ако не е маршрут
+        /*
+        |--------------------------------------------------------------------------
+        | Ако не е маршрут
+        |--------------------------------------------------------------------------
+        */
+
         return redirect()
             ->route('collections.index', $client)
             ->with(
@@ -135,14 +194,27 @@ class CollectionController extends Controller
             'liters' => 'required|numeric|min:0',
             'price_per_liter' => 'required|numeric|min:0',
             'notes' => 'nullable|string',
+
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
         ]);
 
         $collection->update([
+
             'collection_date' => $validated['collection_date'],
+
             'liters' => $validated['liters'],
+
             'price_per_liter' => $validated['price_per_liter'],
+
             'total_price' => $validated['liters'] * $validated['price_per_liter'],
+
             'notes' => $validated['notes'] ?? null,
+
+            'latitude' => $validated['latitude'] ?? null,
+
+            'longitude' => $validated['longitude'] ?? null,
+
         ]);
 
         return back()->with(
@@ -156,6 +228,14 @@ class CollectionController extends Controller
      */
     public function destroy(Collection $collection)
     {
+        if ($collection->signature) {
+
+            Storage::disk('public')->delete(
+                $collection->signature
+            );
+
+        }
+
         $client = $collection->client;
 
         $collection->delete();

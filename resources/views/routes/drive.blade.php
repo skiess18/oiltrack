@@ -526,7 +526,87 @@ document.getElementById('saveButton').onclick=function(){
     document.getElementById('collectionForm').submit();
 
 };
+const canvas = document.getElementById('signature-pad');
+const ctx = canvas.getContext('2d');
 
+canvas.width = canvas.offsetWidth;
+canvas.height = 220;
+
+ctx.lineWidth = 2;
+ctx.lineCap = 'round';
+ctx.strokeStyle = '#000';
+
+let drawing = false;
+
+function getPos(e) {
+
+    const rect = canvas.getBoundingClientRect();
+
+    if (e.touches) {
+
+        return {
+            x: e.touches[0].clientX - rect.left,
+            y: e.touches[0].clientY - rect.top
+        };
+
+    }
+
+    return {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+    };
+
+}
+
+function start(e){
+
+    drawing = true;
+
+    const pos = getPos(e);
+
+    ctx.beginPath();
+    ctx.moveTo(pos.x,pos.y);
+
+}
+
+function move(e){
+
+    if(!drawing) return;
+
+    e.preventDefault();
+
+    const pos = getPos(e);
+
+    ctx.lineTo(pos.x,pos.y);
+
+    ctx.stroke();
+
+}
+
+function end(){
+
+    drawing = false;
+
+    document.getElementById('signature').value = canvas.toDataURL();
+
+}
+
+canvas.addEventListener('mousedown',start);
+canvas.addEventListener('mousemove',move);
+canvas.addEventListener('mouseup',end);
+canvas.addEventListener('mouseleave',end);
+
+canvas.addEventListener('touchstart',start);
+canvas.addEventListener('touchmove',move,{passive:false});
+canvas.addEventListener('touchend',end);
+
+document.getElementById('clearSignature').onclick=function(){
+
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    document.getElementById('signature').value='';
+
+};
 </script>
 
 </x-app-layout>

@@ -1,0 +1,34 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('collections', function (Blueprint $table) {
+
+            $table->longText('signature')->nullable()->after('image');
+
+            $table->decimal('latitude',10,7)->nullable()->after('signature');
+
+            $table->decimal('longitude',10,7)->nullable()->after('latitude');
+
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('collections', function (Blueprint $table) {
+
+            $table->dropColumn([
+                'signature',
+                'latitude',
+                'longitude',
+            ]);
+
+        });
+    }
+};
