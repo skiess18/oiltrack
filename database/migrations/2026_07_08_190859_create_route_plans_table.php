@@ -15,11 +15,20 @@ return new class extends Migration
 
             $table->id();
 
-            // Дата на маршрута
+            // Дата
             $table->date('route_date');
 
             // Шофьор
-            $table->string('driver')->nullable();
+            $table->foreignId('driver_id')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
+
+            // Автомобил
+            $table->foreignId('vehicle_id')
+                ->nullable()
+                ->constrained('vehicles')
+                ->nullOnDelete();
 
             // Бележки
             $table->text('notes')->nullable();

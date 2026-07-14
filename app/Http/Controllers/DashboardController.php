@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use App\Models\Collection;
 use App\Models\RoutePlan;
+use App\Models\TransportReport;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
@@ -14,6 +16,16 @@ class DashboardController extends Controller
      */
     public function index()
     {
+        // Ако е шофьор и няма транспортен отчет за днес
+        if (
+            Auth::user()->isDriver() &&
+            !TransportReport::where('user_id', Auth::id())
+                ->whereDate('date', today())
+                ->exists()
+        ) {
+            return redirect()->route('transport-report.create');
+        }
+
         // Днес
         $today = Carbon::today();
 
@@ -67,10 +79,18 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        // Последни добавени обекти
+        // Последно добавени обекти
         $latestClients = Client::latest()
             ->take(5)
             ->get();
+
+        // Транспортен отчет за днес
+        $todayTransportReport = TransportReport::where(
+            'user_id',
+            Auth::id()
+        )
+        ->whereDate('date', today())
+        ->first();
 
         return view(
             'dashboard',
@@ -86,7 +106,8 @@ class DashboardController extends Controller
                 'completedRoutes',
                 'latestCollections',
                 'latestRoutes',
-                'latestClients'
+                'latestClients',
+                'todayTransportReport'
             )
         );
     }

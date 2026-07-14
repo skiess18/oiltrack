@@ -7,14 +7,37 @@ use Illuminate\Database\Eloquent\Model;
 class RoutePlan extends Model
 {
     protected $fillable = [
+
         'route_date',
-        'driver',
+
+        'driver_id',
+
+        'vehicle_id',
+
         'notes',
+
         'status',
+
     ];
 
     /**
-     * Обектите в маршрута
+     * Шофьор
+     */
+    public function driver()
+    {
+        return $this->belongsTo(User::class, 'driver_id');
+    }
+
+    /**
+     * Автомобил
+     */
+    public function vehicle()
+    {
+        return $this->belongsTo(Vehicle::class);
+    }
+
+    /**
+     * Обекти в маршрута
      */
     public function clients()
     {
@@ -22,7 +45,13 @@ class RoutePlan extends Model
             Client::class,
             'route_plan_client'
         )
-        ->withPivot('position', 'visited')
+        ->withPivot([
+            'position',
+            'visited',
+            'arrived_at',
+            'latitude',
+            'longitude'
+        ])
         ->withTimestamps()
         ->orderBy('pivot_position');
     }

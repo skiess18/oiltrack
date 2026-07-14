@@ -1,5 +1,5 @@
 <x-app-layout>
-
+   
 <x-slot name="header">
 
 <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
@@ -14,7 +14,7 @@
 
         <p class="text-gray-500">
 
-            Създаване на маршрут за събиране на използвано олио
+            Създаване на маршрут за събиране на използвано масло
 
         </p>
 
@@ -91,16 +91,72 @@ required>
 
 <label class="block font-semibold mb-2">
 
-🚛 Шофьор
+👤 Шофьор
 
 </label>
 
-<input
-type="text"
-name="driver"
-value="{{ old('driver') }}"
+<select
+name="driver_id"
 class="w-full border rounded-xl px-4 py-3"
-placeholder="Име на шофьора">
+required>
+
+<option value="">
+
+Избери шофьор
+
+</option>
+
+@foreach($drivers as $driver)
+
+<option
+value="{{ $driver->id }}"
+{{ old('driver_id')==$driver->id ? 'selected' : '' }}>
+
+{{ $driver->name }}
+
+</option>
+
+@endforeach
+
+</select>
+
+</div>
+
+<div class="mb-5">
+
+<label class="block font-semibold mb-2">
+
+🚚 Автомобил
+
+</label>
+
+<select
+name="vehicle_id"
+class="w-full border rounded-xl px-4 py-3"
+required>
+
+<option value="">
+
+Избери автомобил
+
+</option>
+
+@foreach($vehicles as $vehicle)
+
+<option
+value="{{ $vehicle->id }}"
+{{ old('vehicle_id')==$vehicle->id ? 'selected' : '' }}>
+
+{{ $vehicle->registration }}
+-
+{{ $vehicle->brand }}
+{{ $vehicle->model }}
+
+</option>
+
+@endforeach
+
+</select>
 
 </div>
 
@@ -155,8 +211,7 @@ class="w-full border rounded-xl px-4 py-3">
 <textarea
 name="notes"
 rows="6"
-class="w-full border rounded-xl px-4 py-3"
-placeholder="Допълнителна информация...">{{ old('notes') }}</textarea>
+class="w-full border rounded-xl px-4 py-3">{{ old('notes') }}</textarea>
 
 </div>
 
@@ -171,7 +226,6 @@ class="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-4 text-lg f
 </div>
 
 </div>
-
 <div class="lg:col-span-2">
 
 <div class="bg-white rounded-2xl shadow-lg p-6">
@@ -180,7 +234,7 @@ class="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-4 text-lg f
 
 <h3 class="text-xl font-bold">
 
-🏢 Обекти
+🏢 Обекти за посещение
 
 </h3>
 
@@ -204,6 +258,15 @@ class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl">
 
 </button>
 
+<button
+type="button"
+id="autoSelect"
+class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-xl">
+
+🤖 Само нуждаещите се
+
+</button>
+
 </div>
 
 </div>
@@ -213,6 +276,7 @@ type="text"
 id="searchClient"
 placeholder="🔍 Търси обект..."
 class="w-full border rounded-xl px-4 py-3 mb-6">
+
 <div
 id="clientsList"
 class="border rounded-2xl overflow-hidden max-h-[650px] overflow-y-auto">
@@ -220,22 +284,22 @@ class="border rounded-2xl overflow-hidden max-h-[650px] overflow-y-auto">
 @forelse($clients as $client)
 
 <label
-class="client-item flex items-start justify-between gap-4 px-5 py-4 border-b hover:bg-slate-50 cursor-pointer">
+class="client-item flex justify-between items-start gap-4 p-5 border-b hover:bg-slate-50 cursor-pointer">
 
 <div class="flex-1">
 
-<div class="flex items-center gap-2 flex-wrap">
+<div class="flex items-center gap-3 flex-wrap">
 
-<div class="font-bold text-lg">
+<h4 class="font-bold text-lg">
 
 🏢 {{ $client->name }}
 
-</div>
+</h4>
 
 @if($client->needs_collection)
 
 <span
-class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full font-semibold">
+class="bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded-full">
 
 🔴 За посещение
 
@@ -244,7 +308,7 @@ class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full font-semibold">
 @else
 
 <span
-class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-semibold">
+class="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full">
 
 🟢 Добре
 
@@ -260,13 +324,13 @@ class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-semibold"
 
 </div>
 
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
+<div class="grid grid-cols-2 xl:grid-cols-4 gap-4 mt-4">
 
 <div>
 
 <div class="text-xs text-gray-500">
 
-🛢️ Средно
+Средно
 
 </div>
 
@@ -282,7 +346,7 @@ class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-semibold"
 
 <div class="text-xs text-gray-500">
 
-📦 Капацитет
+Капацитет
 
 </div>
 
@@ -298,7 +362,7 @@ class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-semibold"
 
 <div class="text-xs text-gray-500">
 
-📅 Последно
+Последно събиране
 
 </div>
 
@@ -310,7 +374,7 @@ class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-semibold"
 
 @else
 
-Няма
+—
 
 @endif
 
@@ -322,7 +386,7 @@ class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-semibold"
 
 <div class="text-xs text-gray-500">
 
-⏳ Дни
+Дни
 
 </div>
 
@@ -368,7 +432,7 @@ class="client-checkbox w-6 h-6 rounded">
 
 @empty
 
-<div class="text-center py-12 text-gray-500">
+<div class="text-center py-10 text-gray-500">
 
 Няма добавени обекти.
 
@@ -381,7 +445,7 @@ class="client-checkbox w-6 h-6 rounded">
 
     <button
         type="button"
-        id="autoSelect"
+        id="saveRoute"
         class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-xl font-semibold">
 
         🤖 Избери обектите за посещение
@@ -410,23 +474,23 @@ class="client-checkbox w-6 h-6 rounded">
 
 <script>
 
-const search=document.getElementById('searchClient');
-const cards=document.querySelectorAll('.client-item');
-const checkboxes=document.querySelectorAll('.client-checkbox');
+const search = document.getElementById('searchClient');
+const cards = document.querySelectorAll('.client-item');
+const checkboxes = document.querySelectorAll('.client-checkbox');
 
-search.addEventListener('keyup',function(){
+search.addEventListener('keyup', function () {
 
-    let value=this.value.toLowerCase();
+    let value = this.value.toLowerCase();
 
-    cards.forEach(card=>{
+    cards.forEach(card => {
 
-        if(card.innerText.toLowerCase().includes(value)){
+        if (card.innerText.toLowerCase().includes(value)) {
 
-            card.style.display='flex';
+            card.style.display = 'flex';
 
-        }else{
+        } else {
 
-            card.style.display='none';
+            card.style.display = 'none';
 
         }
 
@@ -434,34 +498,34 @@ search.addEventListener('keyup',function(){
 
 });
 
-document.getElementById('selectAll').onclick=function(){
+document.getElementById('selectAll').addEventListener('click', function () {
 
-    checkboxes.forEach(c=>c.checked=true);
+    checkboxes.forEach(c => c.checked = true);
 
-};
+});
 
-document.getElementById('clearAll').onclick=function(){
+document.getElementById('clearAll').addEventListener('click', function () {
 
-    checkboxes.forEach(c=>c.checked=false);
+    checkboxes.forEach(c => c.checked = false);
 
-};
+});
 
-document.getElementById('autoSelect').onclick=function(){
+document.getElementById('autoSelect').addEventListener('click', function () {
 
-    cards.forEach(card=>{
+    cards.forEach(card => {
 
-        const badge=card.querySelector('span');
-        const checkbox=card.querySelector('.client-checkbox');
+        const badge = card.querySelector('span');
+        const checkbox = card.querySelector('.client-checkbox');
 
-        if(badge && badge.innerText.includes('За посещение')){
+        if (badge && badge.innerText.includes('За посещение')) {
 
-            checkbox.checked=true;
+            checkbox.checked = true;
 
         }
 
     });
 
-};
+});
 
 </script>
 

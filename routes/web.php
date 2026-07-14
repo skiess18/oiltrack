@@ -6,6 +6,9 @@ use App\Http\Controllers\CollectionController;
 use App\Http\Controllers\RoutePlanController;
 use App\Http\Controllers\MapController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\VehicleController;
+use App\Http\Controllers\TransportReportController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -24,11 +27,49 @@ Route::middleware(['auth'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
+    | Потребители
+    |--------------------------------------------------------------------------
+    */
+
+    Route::middleware('admin')->group(function () {
+
+        Route::resource('users', UserController::class);
+
+    });
+
+    /*
+    |--------------------------------------------------------------------------
     | Обекти
     |--------------------------------------------------------------------------
     */
 
     Route::resource('clients', ClientController::class);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Транспортен отчет
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/transport-report', [TransportReportController::class, 'create'])
+        ->name('transport-report.create');
+
+    Route::post('/transport-report', [TransportReportController::class, 'store'])
+        ->name('transport-report.store');
+
+    Route::get('/transport-report/end', [TransportReportController::class, 'edit'])
+        ->name('transport-report.edit');
+
+    Route::put('/transport-report/end', [TransportReportController::class, 'update'])
+        ->name('transport-report.update');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Автомобили
+    |--------------------------------------------------------------------------
+    */
+
+    Route::resource('vehicles', VehicleController::class);
 
     /*
     |--------------------------------------------------------------------------
@@ -45,6 +86,21 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/clients/{client}/collections', [CollectionController::class, 'store'])
         ->name('collections.store');
 
+    Route::get('/collections/{collection}', [CollectionController::class, 'show'])
+        ->name('collections.show');
+
+    Route::get('/collections/{collection}/edit', [CollectionController::class, 'edit'])
+        ->name('collections.edit');
+
+    Route::put('/collections/{collection}', [CollectionController::class, 'update'])
+        ->name('collections.update');
+
+    Route::delete('/collections/{collection}', [CollectionController::class, 'destroy'])
+        ->name('collections.destroy');
+
+    Route::get('/collections/{collection}/pdf', [CollectionController::class, 'pdf'])
+        ->name('collections.pdf');
+
     /*
     |--------------------------------------------------------------------------
     | Маршрути
@@ -53,15 +109,12 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('routes', RoutePlanController::class);
 
-    // Стартиране на маршрут
     Route::get('/routes/{route}/drive', [RoutePlanController::class, 'drive'])
         ->name('routes.drive');
 
-    // Маркирай като посетен
     Route::post('/routes/{route}/clients/{client}/visit', [RoutePlanController::class, 'visit'])
         ->name('routes.visit');
 
-    // GPS пристигане (нова функция)
     Route::post('/routes/{route}/clients/{client}/arrive', [RoutePlanController::class, 'arrive'])
         ->name('routes.arrive');
 
