@@ -65,6 +65,37 @@
 
                     </div>
 
+                    <div class="mb-5">
+
+                        <label class="font-semibold block mb-2">
+                            Име на фирма
+                        </label>
+
+                        <input
+                            type="text"
+                            name="company_name"
+                            value="{{ old('company_name') }}"
+                            class="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500"
+                            required>
+
+                    </div>
+
+                    <div class="mb-5">
+
+                        <label class="font-semibold block mb-2">
+                            Булстат
+                        </label>
+
+                        <input
+                            type="text"
+                            name="bulstat"
+                            value="{{ old('bulstat') }}"
+                            maxlength="20"
+                            class="w-full border rounded-xl px-4 py-3"
+                            required>
+
+                    </div>
+
                     <div class="mb-5 relative">
 
                         <label class="font-semibold block mb-2">
@@ -105,6 +136,40 @@
                     <div class="mb-5">
 
                         <label class="font-semibold block mb-2">
+                            Начин на плащане
+                        </label>
+
+                        <div class="flex gap-5">
+                            <label class="inline-flex items-center gap-2">
+                                <input type="radio" name="payment_method" value="cash" {{ old('payment_method', 'cash') === 'cash' ? 'checked' : '' }} required>
+                                В брой
+                            </label>
+
+                            <label class="inline-flex items-center gap-2">
+                                <input type="radio" name="payment_method" value="bank_transfer" {{ old('payment_method') === 'bank_transfer' ? 'checked' : '' }}>
+                                Банков превод
+                            </label>
+                        </div>
+
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 mb-5">
+
+                        <div>
+                            <label class="font-semibold block mb-2">Цена за литър</label>
+                            <input type="number" name="price_per_liter" value="{{ old('price_per_liter') }}" min="0" step="0.01" class="w-full border rounded-xl px-4 py-3" required>
+                        </div>
+
+                        <div>
+                            <label class="font-semibold block mb-2">Интервал за посещение (дни)</label>
+                            <input type="number" name="visit_interval_days" value="{{ old('visit_interval_days') }}" min="1" step="1" class="w-full border rounded-xl px-4 py-3" required>
+                        </div>
+
+                    </div>
+
+                    <div class="mb-5">
+
+                        <label class="font-semibold block mb-2">
                             Телефон
                         </label>
 
@@ -112,7 +177,8 @@
                             type="text"
                             name="phone"
                             value="{{ old('phone') }}"
-                            class="w-full border rounded-xl px-4 py-3">
+                            class="w-full border rounded-xl px-4 py-3"
+                            required>
 
                     </div>
 
@@ -128,6 +194,16 @@
                             value="{{ old('contact_person') }}"
                             class="w-full border rounded-xl px-4 py-3">
 
+                    </div>
+
+                    <div class="mb-5">
+                        <label class="font-semibold block mb-2">Представител</label>
+                        <input type="text" name="representative" value="{{ old('representative') }}" class="w-full border rounded-xl px-4 py-3" required>
+                    </div>
+
+                    <div class="mb-5">
+                        <label class="font-semibold block mb-2">Email</label>
+                        <input type="email" name="email" value="{{ old('email') }}" class="w-full border rounded-xl px-4 py-3" required>
                     </div>
 
                 </div>

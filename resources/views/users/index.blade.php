@@ -163,4 +163,4 @@ class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg">
 
 </div>
 
-</x-app-layout>
+</x-app-layout> 

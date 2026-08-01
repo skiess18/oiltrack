@@ -302,14 +302,15 @@
 
                     </a>
 
-                    <a
-                        href="{{ route('routes.edit',$route) }}"
-                        class="w-11 h-11 rounded-xl bg-yellow-500 hover:bg-yellow-600 text-white flex items-center justify-center transition">
+                    @if(!auth()->user()->isDriver())
+<a
+    href="{{ route('routes.edit',$route) }}"
+    class="w-11 h-11 rounded-xl bg-yellow-500 hover:bg-yellow-600 text-white flex items-center justify-center transition">
 
-                        ✏️
+    ✏️
 
-                    </a>
-
+</a>
+@endif
                     @if($route->status!='completed')
 
                     <a
@@ -322,22 +323,24 @@
 
                     @endif
 
-                    <form
-                        action="{{ route('routes.destroy',$route) }}"
-                        method="POST">
+                    @if(!auth()->user()->isDriver())
+<form
+    action="{{ route('routes.destroy',$route) }}"
+    method="POST">
 
-                        @csrf
-                        @method('DELETE')
+    @csrf
+    @method('DELETE')
 
-                        <button
-                            onclick="return confirm('Да се изтрие ли маршрутът?')"
-                            class="w-11 h-11 rounded-xl bg-red-600 hover:bg-red-700 text-white">
+    <button
+        onclick="return confirm('Да се изтрие ли маршрутът?')"
+        class="w-11 h-11 rounded-xl bg-red-600 hover:bg-red-700 text-white">
 
-                            🗑️
+        🗑️
 
-                        </button>
+    </button>
 
-                    </form>
+</form>
+@endif
 
                 </div>
 
@@ -475,14 +478,17 @@
             👁️ Преглед
 
         </a>
+        @if(!auth()->user()->isDriver())
+<a
+    href="{{ route('routes.edit',$route) }}"
+    class="bg-yellow-500 hover:bg-yellow-600 text-white text-center py-4 font-semibold transition">
 
-        <a
-            href="{{ route('routes.edit',$route) }}"
-            class="bg-yellow-500 hover:bg-yellow-600 text-white text-center py-4 font-semibold transition">
+    ✏️ Редакция
 
-            ✏️ Редакция
+</a>
+@endif
 
-        </a>
+
 
         @if($route->status!='completed')
 
@@ -504,23 +510,25 @@
         </div>
 
         @endif
+        @if(!auth()->user()->isDriver())
+<form
+    action="{{ route('routes.destroy',$route) }}"
+    method="POST">
 
-        <form
-            action="{{ route('routes.destroy',$route) }}"
-            method="POST">
+    @csrf
+    @method('DELETE')
 
-            @csrf
-            @method('DELETE')
+    <button
+        onclick="return confirm('Да се изтрие ли маршрутът?')"
+        class="w-full bg-red-600 hover:bg-red-700 text-white py-4 font-semibold transition">
 
-            <button
-                onclick="return confirm('Да се изтрие ли маршрутът?')"
-                class="w-full bg-red-600 hover:bg-red-700 text-white py-4 font-semibold transition">
+        🗑️ Изтрий
 
-                🗑️ Изтрий
+    </button>
 
-            </button>
+</form>
+@endif
 
-        </form>
 
     </div>
 

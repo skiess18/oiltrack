@@ -163,19 +163,35 @@
 
                     <div>
 
-                        <label class="block mb-2 font-semibold">
+    <label class="block mb-2 font-semibold">
 
-                            Шофьор
+        Шофьор
 
-                        </label>
+    </label>
 
-                        <input
-                            type="text"
-                            name="driver"
-                            value="{{ old('driver',$vehicle->driver) }}"
-                            class="w-full border rounded-xl p-3">
+    <select
+        name="driver_id"
+        class="w-full border rounded-xl p-3">
 
-                    </div>
+        <option value="">
+            -- Избери шофьор --
+        </option>
+
+        @foreach($drivers as $driver)
+
+            <option
+                value="{{ $driver->id }}"
+                {{ old('driver_id', $vehicle->driver_id) == $driver->id ? 'selected' : '' }}>
+
+                {{ $driver->name }}
+
+            </option>
+
+        @endforeach
+
+    </select>
+
+</div>
 
                     <div>
 

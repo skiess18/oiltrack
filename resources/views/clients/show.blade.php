@@ -38,11 +38,63 @@
             <div class="bg-white rounded-xl shadow p-6">
 
                 <div class="text-gray-500 mb-2">
+                    🏢 Име на фирма
+                </div>
+
+                <div class="text-lg font-semibold">
+                    {{ $client->company_name }}
+                </div>
+
+                <div class="text-gray-500 mt-2">
+                    🧾 Булстат: {{ $client->bulstat ?: '-' }}
+                </div>
+
+            </div>
+
+            <div class="bg-white rounded-xl shadow p-6">
+
+                <div class="text-gray-500 mb-2">
                     📍 Адрес
                 </div>
 
                 <div class="text-lg font-semibold">
                     {{ $client->address }}
+                </div>
+
+            </div>
+
+            <div class="bg-white rounded-xl shadow p-6">
+
+                <div class="text-gray-500 mb-2">
+                    💳 Начин на плащане
+                </div>
+
+                <div class="text-lg font-semibold">
+                    {{ $client->payment_method === 'cash' ? 'В брой' : 'Банков превод' }}
+                </div>
+
+            </div>
+
+            <div class="bg-white rounded-xl shadow p-6">
+
+                <div class="text-gray-500 mb-2">
+                    💰 Цена за литър
+                </div>
+
+                <div class="text-2xl font-bold text-green-600">
+                    {{ number_format($client->price_per_liter, 2) }} лв.
+                </div>
+
+            </div>
+
+            <div class="bg-white rounded-xl shadow p-6">
+
+                <div class="text-gray-500 mb-2">
+                    📅 Интервал за посещение
+                </div>
+
+                <div class="text-2xl font-bold text-blue-600">
+                    {{ $client->visit_interval_days }} дни
                 </div>
 
             </div>
@@ -59,6 +111,14 @@
 
                 <div class="text-gray-500 mt-2">
                     📞 {{ $client->phone ?: '-' }}
+                </div>
+
+                <div class="text-gray-500 mt-2">
+                    👤 {{ $client->representative ?: $client->contact_person ?: '-' }}
+                </div>
+
+                <div class="text-gray-500 mt-2">
+                    ✉️ {{ $client->email ?: '-' }}
                 </div>
 
             </div>

@@ -88,11 +88,33 @@
                         <label class="block mb-2 font-semibold">Цвят</label>
                         <input type="text" name="color" class="w-full border rounded-xl p-3">
                     </div>
-
                     <div>
-                        <label class="block mb-2 font-semibold">Шофьор</label>
-                        <input type="text" name="driver" class="w-full border rounded-xl p-3">
-                    </div>
+    <label class="block mb-2 font-semibold">
+        Шофьор
+    </label>
+
+    <select
+        name="driver_id"
+        class="w-full border rounded-xl p-3">
+
+        <option value="">
+            -- Избери шофьор --
+        </option>
+
+        @foreach($drivers as $driver)
+
+            <option value="{{ $driver->id }}">
+
+                {{ $driver->name }}
+
+            </option>
+
+        @endforeach
+
+    </select>
+</div>
+
+                   
 
                     <div>
                         <label class="block mb-2 font-semibold">Разход (л/100 км)</label>

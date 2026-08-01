@@ -230,13 +230,25 @@
 
             <th class="px-6 py-5 text-left font-semibold">🏢 Обект</th>
 
+            <th class="px-6 py-5 text-left font-semibold">Фирма</th>
+
+            <th class="px-6 py-5 text-left font-semibold">Булстат</th>
+
             <th class="px-6 py-5 text-left font-semibold">📍 Адрес</th>
 
             <th class="px-6 py-5 text-left font-semibold">📞 Телефон</th>
 
             <th class="px-6 py-5 text-left font-semibold">👤 Контакт</th>
 
+            <th class="px-6 py-5 text-left font-semibold">Email</th>
+
             <th class="px-6 py-5 text-center font-semibold">🛢️ Капацитет</th>
+
+            <th class="px-6 py-5 text-center font-semibold">Плащане</th>
+
+            <th class="px-6 py-5 text-center font-semibold">Цена / литър</th>
+
+            <th class="px-6 py-5 text-center font-semibold">Посещение</th>
 
             <th class="px-6 py-5 text-center font-semibold">⚙️ Действия</th>
 
@@ -259,6 +271,18 @@
                     {{ $client->name }}
 
                 </a>
+
+            </td>
+
+            <td class="px-6 py-5">
+
+                {{ $client->company_name }}
+
+            </td>
+
+            <td class="px-6 py-5">
+
+                {{ $client->bulstat ?: '—' }}
 
             </td>
 
@@ -294,9 +318,33 @@
 
             </td>
 
+            <td class="px-6 py-5">
+
+                {{ $client->email ?: '—' }}
+
+            </td>
+
             <td class="px-6 py-5 text-center font-semibold">
 
                 {{ $client->capacity }} L
+
+            </td>
+
+            <td class="px-6 py-5 text-center">
+
+                {{ $client->payment_method === 'cash' ? 'В брой' : 'Банков превод' }}
+
+            </td>
+
+            <td class="px-6 py-5 text-center">
+
+                {{ number_format($client->price_per_liter, 2) }} лв.
+
+            </td>
+
+            <td class="px-6 py-5 text-center">
+
+                {{ $client->visit_interval_days }} дни
 
             </td>
 
@@ -338,7 +386,7 @@
 
         <tr>
 
-            <td colspan="6" class="py-16 text-center text-gray-500">
+            <td colspan="12" class="py-16 text-center text-gray-500">
 
                 Няма намерени обекти.
 
@@ -411,9 +459,47 @@
 
                     @endif
 
+                    @if($client->representative)
+                    <div>👤 Представител: {{ $client->representative }}</div>
+                    @endif
+
+                    @if($client->email)
+                    <div>✉️ {{ $client->email }}</div>
+                    @endif
+
                     <div class="font-semibold">
 
                         🛢️ Капацитет: {{ $client->capacity }} L
+
+                    </div>
+
+                    <div>
+
+                        🏢 Фирма: {{ $client->company_name }}
+
+                    </div>
+
+                    <div>
+
+                        🧾 Булстат: {{ $client->bulstat ?: '—' }}
+
+                    </div>
+
+                    <div>
+
+                        💳 Плащане: {{ $client->payment_method === 'cash' ? 'В брой' : 'Банков превод' }}
+
+                    </div>
+
+                    <div>
+
+                        💰 Цена / литър: {{ number_format($client->price_per_liter, 2) }} лв.
+
+                    </div>
+
+                    <div>
+
+                        📅 Посещение: на всеки {{ $client->visit_interval_days }} дни
 
                     </div>
 

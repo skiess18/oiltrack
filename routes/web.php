@@ -9,6 +9,9 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\TransportReportController;
+use App\Http\Controllers\StatisticsController;
+use App\Http\Controllers\WarehouseController;
+use App\Http\Controllers\ProtocolController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -27,14 +30,41 @@ Route::middleware(['auth'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Потребители
+    | Администратор
     |--------------------------------------------------------------------------
     */
 
     Route::middleware('admin')->group(function () {
 
+        /*
+        |--------------------------------------------------------------------------
+        | Статистика
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get('/statistics', [StatisticsController::class, 'index'])
+            ->name('statistics.index');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Потребители
+        |--------------------------------------------------------------------------
+        */
+
         Route::resource('users', UserController::class);
 
+        /*
+        |--------------------------------------------------------------------------
+        | Склад
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get('/warehouse/report', [WarehouseController::class, 'report'])
+            ->name('warehouse.report');
+
+        Route::resource('warehouse', WarehouseController::class)
+            ->except('show')
+            ->parameters(['warehouse' => 'warehouseTransaction']);
     });
 
     /*
@@ -101,6 +131,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/collections/{collection}/pdf', [CollectionController::class, 'pdf'])
         ->name('collections.pdf');
 
+    Route::get('/protocols', [ProtocolController::class, 'index'])->name('protocols.index');
+    Route::get('/protocols/{protocol}/preview', [ProtocolController::class, 'preview'])->name('protocols.preview');
+    Route::get('/protocols/{protocol}/download', [ProtocolController::class, 'download'])->name('protocols.download');
+    Route::post('/protocols/{protocol}/resend', [ProtocolController::class, 'resend'])->name('protocols.resend');
+    Route::delete('/protocols/{protocol}', [ProtocolController::class, 'destroy'])->name('protocols.destroy');
+
     /*
     |--------------------------------------------------------------------------
     | Маршрути
@@ -126,7 +162,6 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/map', [MapController::class, 'index'])
         ->name('map.index');
-
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

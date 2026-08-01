@@ -128,7 +128,7 @@ style="width: {{ $percent }}%">
 
 <div class="text-2xl font-bold mt-2">
 
-{{ $route->driver ?: '-' }}
+{{ $route->driver->name ?? '-' }}
 
 </div>
 

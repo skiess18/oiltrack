@@ -18,10 +18,6 @@ class TransportReport extends Model
         'notes',
     ];
 
-    protected $casts = [
-        'date' => 'date',
-    ];
-
     public function user()
     {
         return $this->belongsTo(User::class);

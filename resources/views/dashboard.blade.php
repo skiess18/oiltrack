@@ -88,7 +88,51 @@
 
 </div>
 
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-5">
+
+    <div class="bg-white rounded-3xl shadow-md hover:shadow-xl transition-all p-6">
+        <div class="text-gray-500">🏭 Текуща складова наличност</div>
+        <div class="text-4xl font-bold mt-2 text-blue-600">{{ number_format($currentWarehouseStock, 2) }}</div>
+        <div class="text-sm text-gray-400">литра</div>
+    </div>
+
+    @if(!auth()->user()->isDriver())
+        <div class="bg-white rounded-3xl shadow-md hover:shadow-xl transition-all p-6">
+            <div class="text-gray-500">🛢️ Събрано днес</div>
+            <div class="text-4xl font-bold mt-2 text-green-600">{{ number_format($todayLiters, 2) }}</div>
+            <div class="text-sm text-gray-400">литра</div>
+        </div>
+
+        <div class="bg-white rounded-3xl shadow-md hover:shadow-xl transition-all p-6">
+            <div class="text-gray-500">📈 Събрано този месец</div>
+            <div class="text-4xl font-bold mt-2 text-emerald-600">{{ number_format($monthCollected, 2) }}</div>
+            <div class="text-sm text-gray-400">литра</div>
+        </div>
+
+        <div class="bg-white rounded-3xl shadow-md hover:shadow-xl transition-all p-6">
+            <div class="text-gray-500">♻️ Рециклирано този месец</div>
+            <div class="text-4xl font-bold mt-2 text-orange-500">{{ number_format($monthRecycled, 2) }}</div>
+            <div class="text-sm text-gray-400">литра</div>
+        </div>
+
+        <div class="bg-white rounded-3xl shadow-md hover:shadow-xl transition-all p-6">
+            <div class="text-gray-500">💰 Общ приход</div>
+            <div class="text-4xl font-bold mt-2 text-indigo-600">{{ number_format($totalRevenue, 2) }}</div>
+            <div class="text-sm text-gray-400">лв.</div>
+        </div>
+    @endif
+
+</div>
+
 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+    @if(auth()->user()->isAdmin())
+<div class="flex justify-end">
+    <a href="{{ route('statistics.index') }}"
+       class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-2xl shadow-lg font-semibold transition">
+        📊 Статистика
+    </a>
+</div>
+@endif
 
 <div class="bg-white rounded-3xl shadow-md hover:shadow-xl transition-all p-6">
 
@@ -163,7 +207,7 @@
 
             <div class="text-gray-500">
 
-                Общ приход
+                Общо платени
 
             </div>
 
@@ -251,7 +295,7 @@
 
         <div class="text-gray-500 font-semibold">
 
-            💰 Приход днес
+            💰 Платени днес
 
         </div>
 

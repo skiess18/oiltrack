@@ -6,6 +6,7 @@ use App\Models\Client;
 use App\Models\Collection;
 use App\Models\RoutePlan;
 use App\Models\TransportReport;
+use App\Services\WarehouseInventoryService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
@@ -14,83 +15,68 @@ class DashboardController extends Controller
     /**
      * Dashboard
      */
-    public function index()
+    public function index(WarehouseInventoryService $inventory)
     {
-        // Ако е шофьор и няма транспортен отчет за днес
-        if (
-            Auth::user()->isDriver() &&
-            !TransportReport::where('user_id', Auth::id())
+        $todayTransportReport = null;
+
+        if (Auth::user()->isDriver()) {
+
+            $todayTransportReport = TransportReport::where('user_id', Auth::id())
                 ->whereDate('date', today())
-                ->exists()
-        ) {
-            return redirect()->route('transport-report.create');
+                ->first();
+
+            // Ако няма започнат отчет за днес,
+            // показва Dashboard без да пренасочва.
         }
 
-        // Днес
         $today = Carbon::today();
 
-        // Основна статистика
+        // Общ брой клиенти
         $clientsCount = Client::count();
 
-        $collectionsCount = Collection::count();
+        // Данни само за текущия ден
+        $collectionsCount = Collection::whereDate('collection_date', $today)
+            ->count();
 
-        $totalLiters = Collection::sum('liters');
+        $totalLiters = Collection::whereDate('collection_date', $today)
+            ->sum('liters');
 
         $totalRevenue = Collection::sum('total_price');
 
-        // За днес
-        $todayLiters = Collection::whereDate(
-            'collection_date',
-            $today
-        )->sum('liters');
+        // Запазени за съвместимост с изгледа
+        $todayLiters = $totalLiters;
+        $todayRevenue = Collection::whereDate('collection_date', $today)
+            ->sum('total_price');
 
-        $todayRevenue = Collection::whereDate(
-            'collection_date',
-            $today
-        )->sum('total_price');
+        $monthStart = Carbon::now()->startOfMonth();
+        $monthEnd = Carbon::now()->endOfMonth();
+        $currentWarehouseStock = $inventory->currentStock();
+        $monthCollected = $inventory->collectedBetween($monthStart, $monthEnd);
+        $monthRecycled = $inventory->recycledBetween($monthStart, $monthEnd);
 
-        // Маршрути
-        $todayRoutes = RoutePlan::whereDate(
-            'route_date',
-            $today
-        )->count();
+        $todayRoutes = RoutePlan::whereDate('route_date', $today)
+            ->count();
 
-        $activeRoutes = RoutePlan::whereIn(
-            'status',
-            [
-                'planned',
-                'in_progress'
-            ]
-        )->count();
+        $activeRoutes = RoutePlan::whereIn('status', [
+            'planned',
+            'in_progress',
+        ])->count();
 
-        $completedRoutes = RoutePlan::where(
-            'status',
-            'completed'
-        )->count();
+        $completedRoutes = RoutePlan::where('status', 'completed')
+            ->count();
 
-        // Последни събирания
         $latestCollections = Collection::with('client')
             ->latest('collection_date')
             ->take(8)
             ->get();
 
-        // Последни маршрути
         $latestRoutes = RoutePlan::latest('route_date')
             ->take(5)
             ->get();
 
-        // Последно добавени обекти
         $latestClients = Client::latest()
             ->take(5)
             ->get();
-
-        // Транспортен отчет за днес
-        $todayTransportReport = TransportReport::where(
-            'user_id',
-            Auth::id()
-        )
-        ->whereDate('date', today())
-        ->first();
 
         return view(
             'dashboard',
@@ -101,6 +87,9 @@ class DashboardController extends Controller
                 'totalRevenue',
                 'todayLiters',
                 'todayRevenue',
+                'currentWarehouseStock',
+                'monthCollected',
+                'monthRecycled',
                 'todayRoutes',
                 'activeRoutes',
                 'completedRoutes',

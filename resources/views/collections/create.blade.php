@@ -125,30 +125,29 @@
 
                 </div>
 
-                <div>
-
-                    <label class="block font-semibold mb-2">
-
-                        💰 Цена за литър
-
-                    </label>
-
-                    <input
-                        id="price"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        name="price_per_liter"
-                        value="{{ old('price_per_liter',0) }}"
-                        class="w-full border rounded-xl px-4 py-5 text-xl"
-                        required>
-
-                </div>
-                                <div class="bg-slate-100 rounded-2xl p-6">
+                <div class="bg-slate-100 rounded-2xl p-6">
 
                     <div class="text-gray-500 mb-2">
 
-                        💵 Обща сума
+                        💰 Цена за литър
+
+                    </div>
+
+                    <div class="text-2xl font-bold text-slate-800">
+
+                        {{ number_format($client->price_per_liter, 2) }} лв.
+
+                    </div>
+
+                </div>
+
+                @if($client->payment_method === 'cash')
+
+                <div class="bg-green-50 border border-green-200 rounded-2xl p-6">
+
+                    <div class="text-gray-500 mb-2">
+
+                        💵 Сума за събиране
 
                     </div>
 
@@ -161,6 +160,16 @@
                     </div>
 
                 </div>
+
+                @else
+
+                <div class="bg-blue-50 border border-blue-200 rounded-2xl p-6 text-blue-800 font-semibold">
+
+                    💳 Плащане по банков път
+
+                </div>
+
+                @endif
 
                 <div>
 
@@ -195,20 +204,20 @@
 <script>
 
 const liters=document.getElementById('liters');
-const price=document.getElementById('price');
 const total=document.getElementById('total');
+const pricePerLiter={{ Js::from((float) $client->price_per_liter) }};
 
 function calculate(){
 
     let l=parseFloat(liters.value)||0;
-    let p=parseFloat(price.value)||0;
 
-    total.innerHTML=(l*p).toFixed(2)+" лв.";
+    if (total) {
+        total.innerHTML=(l*pricePerLiter).toFixed(2)+" лв.";
+    }
 
 }
 
 liters.addEventListener('input',calculate);
-price.addEventListener('input',calculate);
 
 calculate();
 

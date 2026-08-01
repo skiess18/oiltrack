@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Models\Vehicle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -13,7 +14,14 @@ class VehicleController extends Controller
      */
     public function index()
     {
-        $vehicles = Vehicle::orderBy('registration')->paginate(12);
+        if (auth()->user()->isDriver()) {
+            $vehicles = Vehicle::where('driver_id', auth()->id())
+                ->orderBy('registration')
+                ->paginate(12);
+        } else {
+            $vehicles = Vehicle::orderBy('registration')
+                ->paginate(12);
+        }
 
         return view('vehicles.index', compact('vehicles'));
     }
@@ -23,7 +31,11 @@ class VehicleController extends Controller
      */
     public function create()
     {
-        return view('vehicles.create');
+        $drivers = User::where('role', 'driver')
+            ->orderBy('name')
+            ->get();
+
+        return view('vehicles.create', compact('drivers'));
     }
 
     /**
@@ -34,9 +46,7 @@ class VehicleController extends Controller
         $validated = $request->validate([
 
             'brand' => 'required|string|max:255',
-
             'model' => 'required|string|max:255',
-
             'year' => 'nullable|integer|min:1950|max:2100',
 
             'registration' => 'required|string|max:30|unique:vehicles',
@@ -46,6 +56,8 @@ class VehicleController extends Controller
             'color' => 'nullable|string|max:100',
 
             'driver' => 'nullable|string|max:255',
+
+            'driver_id' => 'nullable|exists:users,id',
 
             'fuel_consumption' => 'nullable|numeric|min:0',
 
@@ -66,6 +78,10 @@ class VehicleController extends Controller
             'photo' => 'nullable|image|max:4096'
 
         ]);
+
+        if ($request->filled('driver_id')) {
+            $validated['driver'] = User::find($request->driver_id)?->name;
+        }
 
         if ($request->hasFile('photo')) {
 
@@ -83,25 +99,40 @@ class VehicleController extends Controller
                 'Автомобилът беше добавен успешно.'
             );
     }
-
-    /**
+        /**
      * Детайли
      */
     public function show(Vehicle $vehicle)
     {
+        if (auth()->user()->isDriver() && $vehicle->driver_id != auth()->id()) {
+            abort(403);
+        }
+
         return view(
             'vehicles.show',
             compact('vehicle')
         );
     }
-        /**
+
+    /**
      * Форма за редакция
      */
     public function edit(Vehicle $vehicle)
     {
+        if (auth()->user()->isDriver()) {
+            abort(403);
+        }
+
+        $drivers = User::where('role', 'driver')
+            ->orderBy('name')
+            ->get();
+
         return view(
             'vehicles.edit',
-            compact('vehicle')
+            compact(
+                'vehicle',
+                'drivers'
+            )
         );
     }
 
@@ -110,6 +141,10 @@ class VehicleController extends Controller
      */
     public function update(Request $request, Vehicle $vehicle)
     {
+        if (auth()->user()->isDriver()) {
+            abort(403);
+        }
+
         $validated = $request->validate([
 
             'brand' => 'required|string|max:255',
@@ -125,6 +160,8 @@ class VehicleController extends Controller
             'color' => 'nullable|string|max:100',
 
             'driver' => 'nullable|string|max:255',
+
+            'driver_id' => 'nullable|exists:users,id',
 
             'fuel_consumption' => 'nullable|numeric|min:0',
 
@@ -145,6 +182,10 @@ class VehicleController extends Controller
             'photo' => 'nullable|image|max:4096'
 
         ]);
+
+        if ($request->filled('driver_id')) {
+            $validated['driver'] = User::find($request->driver_id)?->name;
+        }
 
         if ($request->hasFile('photo')) {
 
@@ -175,6 +216,10 @@ class VehicleController extends Controller
      */
     public function destroy(Vehicle $vehicle)
     {
+        if (auth()->user()->isDriver()) {
+            abort(403);
+        }
+
         if ($vehicle->photo) {
 
             Storage::disk('public')->delete($vehicle->photo);

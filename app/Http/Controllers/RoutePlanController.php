@@ -12,163 +12,80 @@ use Carbon\Carbon;
 class RoutePlanController extends Controller
 {
     public function index()
-    {
-        $routes = RoutePlan::with([
-            'clients',
-            'driver',
-            'vehicle'
-        ])
-        ->latest('route_date')
-        ->paginate(15);
+{
+    $routes = RoutePlan::with([
+        'clients',
+        'driver',
+        'vehicle'
+    ])
+    ->latest('route_date')
+    ->paginate(15);
 
-        return view('routes.index', compact('routes'));
+    return view('routes.index', compact('routes'));
+}
+
+public function create()
+{
+    if (auth()->user()->isDriver()) {
+        abort(403);
     }
 
-    public function create()
-    {
-        $clients = Client::orderBy('name')->get();
+    $clients = Client::orderBy('name')->get();
 
-        $drivers = User::orderBy('name')->get();
+    $drivers = User::orderBy('name')->get();
 
-        $vehicles = Vehicle::orderBy('registration')->get();
+    $vehicles = Vehicle::orderBy('registration')->get();
 
-        return view('routes.create', compact(
-            'clients',
-            'drivers',
-            'vehicles'
-        ));
+    return view('routes.create', compact(
+        'clients',
+        'drivers',
+        'vehicles'
+    ));
+}
+
+public function store(Request $request)
+{
+    if (auth()->user()->isDriver()) {
+        abort(403);
     }
 
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
+    $validated = $request->validate([
 
-            'route_date' => 'required|date',
+        'route_date' => 'required|date',
 
-            'driver_id' => 'required|exists:users,id',
+        'driver_id' => 'required|exists:users,id',
 
-            'vehicle_id' => 'required|exists:vehicles,id',
+        'vehicle_id' => 'required|exists:vehicles,id',
 
-            'notes' => 'nullable|string',
+        'notes' => 'nullable|string',
 
-            'status' => 'required|in:planned,in_progress,completed,cancelled',
+        'status' => 'required|in:planned,in_progress,completed,cancelled',
 
-            'clients' => 'nullable|array',
+        'clients' => 'nullable|array',
 
-            'clients.*' => 'exists:clients,id',
+        'clients.*' => 'exists:clients,id',
 
-        ]);
+    ]);
 
-        $route = RoutePlan::create([
+    $route = RoutePlan::create([
 
-            'route_date' => $validated['route_date'],
+        'route_date' => $validated['route_date'],
 
-            'driver_id' => $validated['driver_id'],
+        'driver_id' => $validated['driver_id'],
 
-            'vehicle_id' => $validated['vehicle_id'],
+        'vehicle_id' => $validated['vehicle_id'],
 
-            'notes' => $validated['notes'] ?? null,
+        'notes' => $validated['notes'] ?? null,
 
-            'status' => $validated['status'],
+        'status' => $validated['status'],
 
-        ]);
+    ]);
 
-        if (!empty($validated['clients'])) {
-
-            $sync = [];
-
-            foreach ($validated['clients'] as $i => $clientId) {
-
-                $sync[$clientId] = [
-
-                    'position' => $i + 1,
-
-                    'visited' => false,
-
-                ];
-
-            }
-
-            $route->clients()->sync($sync);
-
-        }
-
-        return redirect()
-            ->route('routes.show', $route)
-            ->with(
-                'success',
-                'Маршрутът беше създаден успешно.'
-            );
-    }
-        public function show(RoutePlan $route)
-    {
-        $route->load([
-            'clients' => fn($q) => $q->orderBy('position'),
-            'driver',
-            'vehicle'
-        ]);
-
-        return view('routes.show', compact('route'));
-    }
-
-    public function edit(RoutePlan $route)
-    {
-        $clients = Client::orderBy('name')->get();
-
-        $drivers = User::orderBy('name')->get();
-
-        $vehicles = Vehicle::orderBy('registration')->get();
-
-        $route->load('clients');
-
-        return view(
-            'routes.edit',
-            compact(
-                'route',
-                'clients',
-                'drivers',
-                'vehicles'
-            )
-        );
-    }
-
-    public function update(Request $request, RoutePlan $route)
-    {
-        $validated = $request->validate([
-
-            'route_date' => 'required|date',
-
-            'driver_id' => 'required|exists:users,id',
-
-            'vehicle_id' => 'required|exists:vehicles,id',
-
-            'notes' => 'nullable|string',
-
-            'status' => 'required|in:planned,in_progress,completed,cancelled',
-
-            'clients' => 'nullable|array',
-
-            'clients.*' => 'exists:clients,id',
-
-        ]);
-
-        $route->update([
-
-            'route_date' => $validated['route_date'],
-
-            'driver_id' => $validated['driver_id'],
-
-            'vehicle_id' => $validated['vehicle_id'],
-
-            'notes' => $validated['notes'] ?? null,
-
-            'status' => $validated['status'],
-
-        ]);
+    if (!empty($validated['clients'])) {
 
         $sync = [];
 
-        foreach (($validated['clients'] ?? []) as $i => $clientId) {
+        foreach ($validated['clients'] as $i => $clientId) {
 
             $sync[$clientId] = [
 
@@ -182,164 +99,283 @@ class RoutePlanController extends Controller
 
         $route->clients()->sync($sync);
 
+    }
+
+    return redirect()
+        ->route('routes.show', $route)
+        ->with(
+            'success',
+            'Маршрутът беше създаден успешно.'
+        );
+}
+
+public function show(RoutePlan $route)
+{
+    $route->load([
+        'clients' => fn($q) => $q->orderBy('position'),
+        'driver',
+        'vehicle'
+    ]);
+
+    return view('routes.show', compact('route'));
+}
+
+public function edit(RoutePlan $route)
+{
+    if (auth()->user()->isDriver()) {
+        abort(403);
+    }
+
+    $clients = Client::orderBy('name')->get();
+
+    $drivers = User::orderBy('name')->get();
+
+    $vehicles = Vehicle::orderBy('registration')->get();
+
+    $route->load('clients');
+
+    return view(
+        'routes.edit',
+        compact(
+            'route',
+            'clients',
+            'drivers',
+            'vehicles'
+        )
+    );
+}
+
+public function update(Request $request, RoutePlan $route)
+{
+    if (auth()->user()->isDriver()) {
+        abort(403);
+    }
+
+    $validated = $request->validate([
+
+        'route_date' => 'required|date',
+
+        'driver_id' => 'required|exists:users,id',
+
+        'vehicle_id' => 'required|exists:vehicles,id',
+
+        'notes' => 'nullable|string',
+
+        'status' => 'required|in:planned,in_progress,completed,cancelled',
+
+        'clients' => 'nullable|array',
+
+        'clients.*' => 'exists:clients,id',
+
+    ]);
+
+    $route->update([
+
+        'route_date' => $validated['route_date'],
+
+        'driver_id' => $validated['driver_id'],
+
+        'vehicle_id' => $validated['vehicle_id'],
+
+        'notes' => $validated['notes'] ?? null,
+
+        'status' => $validated['status'],
+
+    ]);
+
+    $sync = [];
+
+    foreach (($validated['clients'] ?? []) as $i => $clientId) {
+
+        $sync[$clientId] = [
+
+            'position' => $i + 1,
+
+            'visited' => false,
+
+        ];
+
+    }
+
+    $route->clients()->sync($sync);
+
+    return redirect()
+        ->route('routes.show', $route)
+        ->with(
+            'success',
+            'Маршрутът беше обновен успешно.'
+        );
+}
+public function destroy(RoutePlan $route)
+{
+    if (auth()->user()->isDriver()) {
+        abort(403);
+    }
+
+    $route->clients()->detach();
+
+    $route->delete();
+
+    return redirect()
+        ->route('routes.index')
+        ->with(
+            'success',
+            'Маршрутът беше изтрит успешно.'
+        );
+}
+
+public function drive(RoutePlan $route)
+{
+    $activeReport = \App\Models\TransportReport::where('user_id', auth()->id())
+        ->whereNull('end_km')
+        ->first();
+
+    if (!$activeReport) {
+        return redirect()
+            ->route('transport-report.create')
+            ->with('error', 'Първо започнете транспортен отчет.');
+    }
+
+    $route->load([
+        'driver',
+        'vehicle',
+        'clients' => fn($q) => $q->orderBy('position')
+    ]);
+
+    $client = $route->clients()
+        ->wherePivot('visited', false)
+        ->orderBy('position')
+        ->first();
+
+    if (!$client) {
+
+        $route->update([
+            'status' => 'completed',
+        ]);
+
         return redirect()
             ->route('routes.show', $route)
             ->with(
                 'success',
-                'Маршрутът беше обновен успешно.'
+                '🎉 Маршрутът беше завършен успешно.'
             );
     }
 
-    public function destroy(RoutePlan $route)
-    {
-        $route->clients()->detach();
+    if ($route->status === 'planned') {
 
-        $route->delete();
-
-        return redirect()
-            ->route('routes.index')
-            ->with(
-                'success',
-                'Маршрутът беше изтрит успешно.'
-            );
-    }
-        public function drive(RoutePlan $route)
-    {
-        $route->load([
-            'driver',
-            'vehicle',
-            'clients' => fn($q) => $q->orderBy('position')
+        $route->update([
+            'status' => 'in_progress',
         ]);
 
-        $client = $route->clients()
-            ->wherePivot('visited', false)
-            ->orderBy('position')
-            ->first();
-
-        if (!$client) {
-
-            $route->update([
-                'status' => 'completed',
-            ]);
-
-            return redirect()
-                ->route('routes.show', $route)
-                ->with(
-                    'success',
-                    '🎉 Маршрутът беше завършен успешно.'
-                );
-        }
-
-        if ($route->status === 'planned') {
-
-            $route->update([
-                'status' => 'in_progress',
-            ]);
-
-        }
-
-        return view(
-            'routes.drive',
-            compact(
-                'route',
-                'client'
-            )
-        );
     }
 
-    public function visit(RoutePlan $route, Client $client)
-    {
-        $route->clients()->updateExistingPivot(
-            $client->id,
-            [
-                'visited' => true,
-            ]
-        );
+    return view(
+        'routes.drive',
+        compact(
+            'route',
+            'client'
+        )
+    );
+}
 
-        return $this->finishOrContinue($route);
-    }
+public function visit(RoutePlan $route, Client $client)
+{
+    $route->clients()->updateExistingPivot(
+        $client->id,
+        [
+            'visited' => true,
+        ]
+    );
 
-    public function arrive(Request $request, RoutePlan $route, Client $client)
-    {
-        $request->validate([
-            'latitude' => 'required|numeric',
-            'longitude' => 'required|numeric',
+    return $this->finishOrContinue($route);
+}
+
+public function arrive(Request $request, RoutePlan $route, Client $client)
+{
+    $request->validate([
+        'latitude' => 'required|numeric',
+        'longitude' => 'required|numeric',
+    ]);
+
+    $route->clients()->updateExistingPivot(
+        $client->id,
+        [
+            'visited' => true,
+            'arrived_at' => Carbon::now(),
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
+        ]
+    );
+
+    $next = $route->clients()
+        ->wherePivot('visited', false)
+        ->orderBy('position')
+        ->first();
+
+    if (!$next) {
+
+        $route->update([
+            'status' => 'completed',
         ]);
-
-        $route->clients()->updateExistingPivot(
-            $client->id,
-            [
-                'visited' => true,
-                'arrived_at' => Carbon::now(),
-                'latitude' => $request->latitude,
-                'longitude' => $request->longitude,
-            ]
-        );
-
-        $next = $route->clients()
-            ->wherePivot('visited', false)
-            ->orderBy('position')
-            ->first();
-
-        if (!$next) {
-
-            $route->update([
-                'status' => 'completed',
-            ]);
-
-            return response()->json([
-                'completed' => true,
-                'redirect' => route('routes.show', $route),
-            ]);
-        }
 
         return response()->json([
-            'completed' => false,
-            'redirect' => route('routes.drive', $route),
+            'completed' => true,
+            'redirect' => route('routes.show', $route),
         ]);
     }
-        /**
-     * Оптимизация на маршрута
-     */
-    public function optimize(RoutePlan $route)
-    {
+
+    return response()->json([
+        'completed' => false,
+        'redirect' => route('routes.drive', $route),
+    ]);
+}
+
+/**
+ * Оптимизация на маршрута
+ */
+public function optimize(RoutePlan $route)
+{
+    if (auth()->user()->isDriver()) {
+        abort(403);
+    }
+
+    return redirect()
+        ->route('routes.edit', $route)
+        ->with(
+            'success',
+            '🤖 Автоматичната оптимизация ще бъде добавена скоро.'
+        );
+}
+
+/**
+ * Проверява дали маршрутът е приключил
+ */
+protected function finishOrContinue(RoutePlan $route)
+{
+    $next = $route->clients()
+        ->wherePivot('visited', false)
+        ->orderBy('position')
+        ->first();
+
+    if (!$next) {
+
+        $route->update([
+            'status' => 'completed',
+        ]);
+
         return redirect()
-            ->route('routes.edit', $route)
+            ->route('routes.show', $route)
             ->with(
                 'success',
-                '🤖 Автоматичната оптимизация ще бъде добавена скоро.'
+                '🎉 Маршрутът беше завършен успешно.'
             );
     }
 
-    /**
-     * Проверява дали маршрутът е приключил
-     */
-    protected function finishOrContinue(RoutePlan $route)
-    {
-        $next = $route->clients()
-            ->wherePivot('visited', false)
-            ->orderBy('position')
-            ->first();
-
-        if (!$next) {
-
-            $route->update([
-                'status' => 'completed',
-            ]);
-
-            return redirect()
-                ->route('routes.show', $route)
-                ->with(
-                    'success',
-                    '🎉 Маршрутът беше завършен успешно.'
-                );
-        }
-
-        return redirect()
-            ->route('routes.drive', $route)
-            ->with(
-                'success',
-                '✅ Обектът беше маркиран като посетен.'
-            );
-    }
+    return redirect()
+        ->route('routes.drive', $route)
+        ->with(
+            'success',
+            '✅ Обектът беше маркиран като посетен.'
+        );
+}
 }

@@ -14,8 +14,15 @@ class Client extends Model
         'longitude',
         'phone',
         'contact_person',
+        'representative',
+        'email',
         'capacity',
         'notes',
+        'company_name',
+        'bulstat',
+        'payment_method',
+        'price_per_liter',
+        'visit_interval_days',
     ];
 
     /*

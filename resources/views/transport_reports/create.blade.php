@@ -67,16 +67,19 @@
                     class="w-full rounded-xl border-slate-300">
 
                     <option value="">
-
                         Изберете автомобил
-
                     </option>
 
                     @foreach($vehicles as $vehicle)
 
-                        <option value="{{ $vehicle->id }}">
+                        <option
+                            value="{{ $vehicle->id }}"
+                            {{ old('vehicle_id') == $vehicle->id ? 'selected' : '' }}>
 
-                            {{ $vehicle->registration_number }}
+                            {{ $vehicle->registration }}
+                            -
+                            {{ $vehicle->brand }}
+                            {{ $vehicle->model }}
 
                         </option>
 
@@ -99,6 +102,7 @@
                     <input
                         type="number"
                         name="start_km"
+                        value="{{ old('start_km') }}"
                         required
                         min="0"
                         class="w-full rounded-xl border-slate-300"
@@ -117,6 +121,7 @@
                     <input
                         type="number"
                         name="start_fuel"
+                        value="{{ old('start_fuel') }}"
                         required
                         min="0"
                         max="100"
@@ -139,13 +144,14 @@
                     name="notes"
                     rows="4"
                     class="w-full rounded-xl border-slate-300"
-                    placeholder="По желание..."></textarea>
+                    placeholder="По желание...">{{ old('notes') }}</textarea>
 
             </div>
 
             <div class="pt-4">
 
                 <button
+                    type="submit"
                     class="w-full bg-green-600 hover:bg-green-700 text-white rounded-2xl py-4 text-lg font-bold shadow-lg">
 
                     ▶️ Започни работния ден

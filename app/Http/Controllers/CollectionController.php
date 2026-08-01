@@ -5,8 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use App\Models\Collection;
 use App\Models\RoutePlan;
+use App\Models\TransportReport;
+use App\Services\WarehouseInventoryService;
+use App\Services\ProtocolService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 class CollectionController extends Controller
 {
@@ -41,7 +46,6 @@ class CollectionController extends Controller
         $validated = $request->validate([
             'collection_date' => 'required|date',
             'liters' => 'required|numeric|min:0',
-            'price_per_liter' => 'required|numeric|min:0',
             'notes' => 'nullable|string',
 
             'route_id' => 'nullable|exists:route_plans,id',
@@ -85,17 +89,29 @@ class CollectionController extends Controller
         |--------------------------------------------------------------------------
         */
 
+        $transportReport = TransportReport::query()
+            ->where('user_id', auth()->id())
+            ->whereDate('date', $validated['collection_date'])
+            ->latest()
+            ->first();
+
         $collection = Collection::create([
 
             'client_id' => $client->id,
+
+            'user_id' => auth()->id(),
+
+            'transport_report_id' => $transportReport?->id,
 
             'collection_date' => $validated['collection_date'],
 
             'liters' => $validated['liters'],
 
-            'price_per_liter' => $validated['price_per_liter'],
+            'price_per_liter' => $client->price_per_liter,
 
-            'total_price' => $validated['liters'] * $validated['price_per_liter'],
+            'total_price' => $validated['liters'] * $client->price_per_liter,
+
+            'payment_method' => $client->payment_method,
 
             'notes' => $validated['notes'] ?? null,
 
@@ -173,6 +189,8 @@ class CollectionController extends Controller
      */
     public function show(Collection $collection)
     {
+        $collection->load(['client', 'user', 'transportReport.vehicle']);
+
         return view('collections.show', compact('collection'));
     }
 
@@ -187,17 +205,28 @@ class CollectionController extends Controller
     /**
      * Обновяване
      */
-    public function update(Request $request, Collection $collection)
+    public function update(
+        Request $request,
+        Collection $collection,
+        WarehouseInventoryService $inventory
+    )
     {
         $validated = $request->validate([
             'collection_date' => 'required|date',
             'liters' => 'required|numeric|min:0',
-            'price_per_liter' => 'required|numeric|min:0',
             'notes' => 'nullable|string',
 
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
         ]);
+
+        $availableStock = $inventory->currentStock() + (float) $collection->liters;
+
+        if ((float) $validated['liters'] > $availableStock) {
+            throw ValidationException::withMessages([
+                'liters' => 'Количеството не може да бъде записано. Максимално допустимото количество е ' . number_format($availableStock, 2) . ' литра.',
+            ]);
+        }
 
         $collection->update([
 
@@ -205,9 +234,9 @@ class CollectionController extends Controller
 
             'liters' => $validated['liters'],
 
-            'price_per_liter' => $validated['price_per_liter'],
+            'price_per_liter' => $collection->client->price_per_liter,
 
-            'total_price' => $validated['liters'] * $validated['price_per_liter'],
+            'total_price' => $validated['liters'] * $collection->client->price_per_liter,
 
             'notes' => $validated['notes'] ?? null,
 
@@ -226,8 +255,15 @@ class CollectionController extends Controller
     /**
      * Изтриване
      */
-    public function destroy(Collection $collection)
+    public function destroy(Collection $collection, WarehouseInventoryService $inventory)
     {
+        if ($inventory->currentStock() - (float) $collection->liters < 0) {
+            return back()->with(
+                'error',
+                'Събирането не може да бъде изтрито, защото част от количеството вече е предадено от склада.'
+            );
+        }
+
         if ($collection->signature) {
 
             Storage::disk('public')->delete(
@@ -246,5 +282,18 @@ class CollectionController extends Controller
                 'success',
                 'Събирането беше изтрито.'
             );
+    }
+
+    /**
+     * Генерирай приемо-предавателен протокол за печат.
+     */
+    public function pdf(Collection $collection, ProtocolService $protocols)
+    {
+        $protocol = $protocols->generate($collection);
+
+        return response(Storage::disk('public')->get($protocol->pdf_path), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="protocol-' . $collection->id . '.pdf"',
+        ]);
     }
 }

@@ -122,48 +122,69 @@
 
             @endif
 
-            @if(Auth::user()->isAdmin() || Auth::user()->isDispatcher())
-
-            <a
-                href="{{ route('vehicles.index') }}"
-                class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 {{ request()->routeIs('vehicles.*') ? 'bg-blue-600 shadow-lg' : 'hover:bg-slate-800' }}">
-
-                <span class="text-xl">🚚</span>
-
-                <span class="font-medium">
-                    Автомобили
-                </span>
-
-            </a>
-
-            @endif
-
             @if(Auth::user()->isAdmin() || Auth::user()->isDriver())
-            <a
-                href="{{ route('transport-report.create') }}"
-                class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 {{ request()->routeIs('transport-report.*') ? 'bg-blue-600 shadow-lg' : 'hover:bg-slate-800' }}">
 
-                <span class="text-xl">📝</span>
+<a
+    href="{{ route('transport-report.create') }}"
+    class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 {{ request()->routeIs('transport-report.*') ? 'bg-blue-600 shadow-lg' : 'hover:bg-slate-800' }}">
 
-                <span class="font-medium">
-                    Транспортен отчет
-                </span>
+    <span class="text-xl">📝</span>
 
-            </a>
+    <span class="font-medium">
+        Транспортен отчет
+    </span>
 
-            <a
-                href="{{ route('users.index') }}"
-                class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 {{ request()->routeIs('users.*') ? 'bg-blue-600 shadow-lg' : 'hover:bg-slate-800' }}">
+</a>
 
-                <span class="text-xl">👥</span>
+@endif
+@if(!Auth::user()->isDriver())
 
-                <span class="font-medium">
-                    Потребители
-                </span>
+<a
+    href="{{ route('vehicles.index') }}"
+    class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 {{ request()->routeIs('vehicles.*') ? 'bg-blue-600 shadow-lg' : 'hover:bg-slate-800' }}">
 
-            </a>
+    <span class="text-xl">🚚</span>
 
-            @endif
+    <span class="font-medium">
+        Автомобили
+    </span>
+
+</a>
+
+<a href="{{ route('protocols.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 {{ request()->routeIs('protocols.*') ? 'bg-blue-600 shadow-lg' : 'hover:bg-slate-800' }}">
+    <span class="text-xl">📄</span><span class="font-medium">Протоколи</span>
+</a>
+
+@endif
+
+@if(Auth::user()->isAdmin())
+
+<a
+    href="{{ route('warehouse.index') }}"
+    class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 {{ request()->routeIs('warehouse.*') ? 'bg-blue-600 shadow-lg' : 'hover:bg-slate-800' }}">
+
+    <span class="text-xl">🏭</span>
+
+    <span class="font-medium">
+        Склад
+    </span>
+
+</a>
+
+<a
+    href="{{ route('users.index') }}"
+    class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 {{ request()->routeIs('users.*') ? 'bg-blue-600 shadow-lg' : 'hover:bg-slate-800' }}">
+
+    <span class="text-xl">👥</span>
+
+    <span class="font-medium">
+        Потребители
+    </span>
+
+</a>
+
+@endif
+            
 
         </nav>
 
@@ -217,40 +238,49 @@
 
                     </button>
 
-                    <div class="flex items-center gap-3 bg-slate-100 rounded-2xl px-4 py-2">
+                    <div class="flex items-center gap-3">
 
-                        <div class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">
+    <div class="flex items-center gap-3 bg-slate-100 rounded-2xl px-4 py-2">
 
-                            {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+        <div class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">
+            {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+        </div>
 
-                        </div>
+        <div class="hidden md:block">
 
-                        <div class="hidden md:block">
+            <div class="font-semibold text-slate-800">
+                {{ Auth::user()->name }}
+            </div>
 
-                            <div class="font-semibold text-slate-800">
+            <div class="text-xs text-slate-500">
+                @if(Auth::user()->isAdmin())
+                    Администратор
+                @elseif(Auth::user()->isDispatcher())
+                    Диспечер
+                @else
+                    Шофьор
+                @endif
+            </div>
 
-                                {{ Auth::user()->name }}
+        </div>
 
-                            </div>
+    </div>
 
-                            <div class="text-xs text-slate-500">
+    <form method="POST" action="{{ route('logout') }}">
+        @csrf
 
-                                @if(Auth::user()->isAdmin())
-                                    Администратор
-                                @elseif(Auth::user()->isDispatcher())
-                                    Диспечер
-                                @else
-                                    Шофьор
-                                @endif
+        <button
+            type="submit"
+            class="w-11 h-11 rounded-xl bg-red-600 hover:bg-red-700 text-white flex items-center justify-center transition"
+            title="Изход">
 
-                            </div>
+            🚪
 
-                        </div>
+        </button>
 
-                    </div>
+    </form>
 
-                </div>
-
+</div>
             </div>
 
         </header>
@@ -427,4 +457,3 @@ a{
 
 </body>
 </html>
-

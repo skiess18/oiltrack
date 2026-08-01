@@ -19,9 +19,10 @@
             <div class="flex gap-3">
 
                 <a href="{{ route('collections.pdf',$collection) }}"
+                   target="_blank"
                    class="bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-xl">
 
-                    📄 PDF
+                    🖨️ Печат на протокол
 
                 </a>
 
@@ -58,6 +59,18 @@
 
                     <div class="font-bold text-xl">
                         {{ $collection->client->name }}
+                    </div>
+
+                </div>
+
+                <div>
+
+                    <div class="text-gray-500">
+                        Начин на плащане
+                    </div>
+
+                    <div class="font-bold">
+                        {{ $collection->payment_method === 'cash' ? 'В брой' : 'По банков път' }}
                     </div>
 
                 </div>
