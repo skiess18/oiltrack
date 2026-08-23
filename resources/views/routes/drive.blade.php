@@ -267,15 +267,9 @@
 
         </label>
 
-        <input
-            id="price"
-            type="number"
-            step="0.01"
-            min="0"
-            value="0"
-            name="price_per_liter"
-            class="w-full border rounded-xl p-3"
-            required>
+        <div class="w-full rounded-xl bg-slate-100 p-3 font-bold">
+            {{ number_format($client->price_per_liter, 2) }} лв.
+        </div>
 
     </div>
 
@@ -427,7 +421,7 @@ $percent = $total ? round(($visited/$total)*100) : 0;
 
         <div class="flex justify-between">
             <span>Шофьор</span>
-            <strong>{{ $route->driver ?: '-' }}</strong>
+            <strong>{{ optional($route->driver)->name ?: '-' }}</strong>
         </div>
 
         <div class="flex justify-between">
@@ -484,17 +478,16 @@ $percent = $total ? round(($visited/$total)*100) : 0;
 <script>
 
 const liters=document.getElementById('liters');
-const price=document.getElementById('price');
 const totalPrice=document.getElementById('totalPrice');
+const pricePerLiter={{ Js::from((float) $client->price_per_liter) }};
 
 function calc(){
 
-    totalPrice.value=((parseFloat(liters.value)||0)*(parseFloat(price.value)||0)).toFixed(2)+' лв.';
+    totalPrice.value=((parseFloat(liters.value)||0)*pricePerLiter).toFixed(2)+' лв.';
 
 }
 
 liters.addEventListener('input',calc);
-price.addEventListener('input',calc);
 
 calc();
 

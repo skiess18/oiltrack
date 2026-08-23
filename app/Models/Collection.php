@@ -26,6 +26,10 @@ class Collection extends Model
 ];
 
     protected $casts = [
+        'collection_date' => 'date',
+        'liters' => 'decimal:2',
+        'price_per_liter' => 'decimal:2',
+        'total_price' => 'decimal:2',
         'protocol_sent_at' => 'datetime',
     ];
 

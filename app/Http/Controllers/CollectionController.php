@@ -55,6 +55,8 @@ class CollectionController extends Controller
             'longitude' => 'nullable|numeric',
         ]);
 
+        $pricePerLiter = $this->clientPricePerLiter($client);
+
         /*
         |--------------------------------------------------------------------------
         | Запис на подписа като PNG
@@ -107,9 +109,9 @@ class CollectionController extends Controller
 
             'liters' => $validated['liters'],
 
-            'price_per_liter' => $client->price_per_liter,
+            'price_per_liter' => $pricePerLiter,
 
-            'total_price' => $validated['liters'] * $client->price_per_liter,
+            'total_price' => $validated['liters'] * $pricePerLiter,
 
             'payment_method' => $client->payment_method,
 
@@ -220,6 +222,9 @@ class CollectionController extends Controller
             'longitude' => 'nullable|numeric',
         ]);
 
+        $client = $collection->client;
+        $pricePerLiter = $this->clientPricePerLiter($client);
+
         $availableStock = $inventory->currentStock() + (float) $collection->liters;
 
         if ((float) $validated['liters'] > $availableStock) {
@@ -234,9 +239,11 @@ class CollectionController extends Controller
 
             'liters' => $validated['liters'],
 
-            'price_per_liter' => $collection->client->price_per_liter,
+            'price_per_liter' => $pricePerLiter,
 
-            'total_price' => $validated['liters'] * $collection->client->price_per_liter,
+            'total_price' => $validated['liters'] * $pricePerLiter,
+
+            'payment_method' => $client->payment_method,
 
             'notes' => $validated['notes'] ?? null,
 
@@ -250,6 +257,21 @@ class CollectionController extends Controller
             'success',
             'Събирането беше обновено успешно.'
         );
+    }
+
+    /**
+     * Return the client's configured rate, or stop before a nullable client
+     * value can be inserted into collections.price_per_liter.
+     */
+    private function clientPricePerLiter(Client $client): float
+    {
+        if ($client->price_per_liter === null) {
+            throw ValidationException::withMessages([
+                'price_per_liter' => 'Client price per liter is not configured.',
+            ]);
+        }
+
+        return (float) $client->price_per_liter;
     }
 
     /**

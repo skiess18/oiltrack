@@ -10,7 +10,7 @@
 
 <p><strong>Дата:</strong> {{ \Carbon\Carbon::parse($report->date)->format('d.m.Y') }}</p>
 
-<p><strong>Шофьор:</strong> {{ $report->user->name }}</p>
+<p><strong>Шофьор:</strong> {{ $driverName }}</p>
 
 <p><strong>Автомобил:</strong> {{ $report->vehicle->registration }}</p>
 

@@ -21,13 +21,19 @@ class DashboardController extends Controller
 
         if (Auth::user()->isDriver()) {
 
-            $todayTransportReport = TransportReport::where('user_id', Auth::id())
+            $todayTransportReport = TransportReport::with('user')
+                ->where('user_id', Auth::id())
                 ->whereDate('date', today())
                 ->first();
 
             // Ако няма започнат отчет за днес,
             // показва Dashboard без да пренасочва.
         }
+
+        // Keep the dashboard view's display value scalar; never pass a User
+        // model for interpolation, which would render its JSON representation.
+        $driverName = optional($todayTransportReport?->user)->name ?? 'Not assigned';
+        $hasOpenTransportReport = (bool) ($todayTransportReport?->end_km === null && $todayTransportReport);
 
         $today = Carbon::today();
 
@@ -51,6 +57,7 @@ class DashboardController extends Controller
         $monthStart = Carbon::now()->startOfMonth();
         $monthEnd = Carbon::now()->endOfMonth();
         $currentWarehouseStock = $inventory->currentStock();
+        $warehouseIsEmpty = $currentWarehouseStock <= 0;
         $monthCollected = $inventory->collectedBetween($monthStart, $monthEnd);
         $monthRecycled = $inventory->recycledBetween($monthStart, $monthEnd);
 
@@ -88,6 +95,7 @@ class DashboardController extends Controller
                 'todayLiters',
                 'todayRevenue',
                 'currentWarehouseStock',
+                'warehouseIsEmpty',
                 'monthCollected',
                 'monthRecycled',
                 'todayRoutes',
@@ -96,7 +104,8 @@ class DashboardController extends Controller
                 'latestCollections',
                 'latestRoutes',
                 'latestClients',
-                'todayTransportReport'
+                'driverName',
+                'hasOpenTransportReport'
             )
         );
     }

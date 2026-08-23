@@ -135,16 +135,16 @@ class TransportReportController extends Controller
     $totalLiters = $collections->sum('liters');
     $totalAmount = $collections->sum('total_price');
 
-    Mail::to('transport@firmata.bg')
-        ->send(new TransportReportMail($report));
+    Mail::to('skiess18@gmail.com')
+    ->send(new TransportReportMail($report));
 
-    Mail::to('accounting@firmata.bg')
-        ->send(new AccountingReportMail(
-            $report,
-            $collections,
-            $totalLiters,
-            $totalAmount
-        ));
+Mail::to('skiess18@gmail.com')
+    ->send(new AccountingReportMail(
+        $report,
+        $collections,
+        $totalLiters,
+        $totalAmount
+    ));
 
     foreach ($collections->unique('client_id') as $collection) {
         $protocol = $protocols->generate($collection);

@@ -88,12 +88,25 @@
 
 </div>
 
+@if(auth()->user()->isDriver())
+    <div class="rounded-3xl bg-white p-6 shadow-md">
+        <div class="text-gray-500">🚛 Работен отчет за днес</div>
+        <div class="mt-2 text-sm text-gray-500">Шофьор</div>
+        <div class="text-lg font-semibold text-slate-800">{{ $driverName }}</div>
+    </div>
+@endif
+
 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-5">
 
     <div class="bg-white rounded-3xl shadow-md hover:shadow-xl transition-all p-6">
         <div class="text-gray-500">🏭 Текуща складова наличност</div>
-        <div class="text-4xl font-bold mt-2 text-blue-600">{{ number_format($currentWarehouseStock, 2) }}</div>
-        <div class="text-sm text-gray-400">литра</div>
+        @if($warehouseIsEmpty)
+            <div class="mt-2 text-xl font-bold text-slate-500">Складът е празен</div>
+            <div class="text-sm text-gray-400">0.00 литра</div>
+        @else
+            <div class="text-4xl font-bold mt-2 text-blue-600">{{ number_format($currentWarehouseStock, 2) }}</div>
+            <div class="text-sm text-gray-400">литра</div>
+        @endif
     </div>
 
     @if(!auth()->user()->isDriver())
@@ -441,7 +454,7 @@
             </div>
             @if(auth()->user()->isDriver())
 
-    @if($todayTransportReport && !$todayTransportReport->end_km)
+    @if($hasOpenTransportReport)
 
         <div class="mt-6">
 

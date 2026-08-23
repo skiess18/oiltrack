@@ -37,4 +37,15 @@ class Vehicle extends Model
     {
         return $this->belongsTo(User::class, 'driver_id');
     }
+
+    /**
+     * The driver assigned to this vehicle.
+     *
+     * Kept separate from the legacy `user` relation so callers can clearly
+     * distinguish the vehicle's driver from the user who created a record.
+     */
+    public function assignedDriver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'driver_id');
+    }
 }

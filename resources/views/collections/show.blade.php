@@ -18,6 +18,13 @@
 
             <div class="flex gap-3">
 
+                <a href="{{ route('collections.edit', $collection) }}"
+                   class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl">
+
+                    ✏️ Редакция
+
+                </a>
+
                 <a href="{{ route('collections.pdf',$collection) }}"
                    target="_blank"
                    class="bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-xl">

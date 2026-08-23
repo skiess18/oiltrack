@@ -13,10 +13,16 @@ class TransportReportMail extends Mailable
     use Queueable, SerializesModels;
 
     public $report;
+    public $driverName;
 
     public function __construct($report)
     {
+        $report->loadMissing('vehicle.assignedDriver');
+
         $this->report = $report;
+        $this->driverName = $report->vehicle?->assignedDriver?->name
+            ?: $report->vehicle?->driver
+            ?: '—';
     }
 
     public function envelope(): Envelope

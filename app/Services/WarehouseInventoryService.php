@@ -3,12 +3,16 @@
 namespace App\Services;
 
 use App\Models\Collection;
+use App\Models\WarehouseTransaction;
 
 class WarehouseInventoryService
 {
     public function currentStock(): float
     {
-        return (float) Collection::sum('liters');
+        $collectedLiters = (float) Collection::sum('liters');
+        $withdrawnLiters = (float) WarehouseTransaction::sum('quantity');
+
+        return max(0.0, $collectedLiters - $withdrawnLiters);
     }
 
     public function collectedBetween($from, $to): float
@@ -19,6 +23,7 @@ class WarehouseInventoryService
 
     public function recycledBetween($from, $to): float
     {
-        return 0.0;
+        return (float) WarehouseTransaction::whereBetween('date', [$from, $to])
+            ->sum('quantity');
     }
 }
