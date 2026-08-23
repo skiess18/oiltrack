@@ -202,8 +202,9 @@
                     </div>
 
                     <div class="mb-5">
-                        <label class="font-semibold block mb-2">Email</label>
-                        <input type="email" name="email" value="{{ old('email') }}" class="w-full border rounded-xl px-4 py-3" required>
+                        <label class="font-semibold block mb-2">Email адреси за документи</label>
+                        <p class="mb-2 text-sm text-slate-500">По един адрес на ред. Полето може да остане празно.</p>
+                        <textarea name="emails[]" rows="3" class="w-full border rounded-xl px-4 py-3" placeholder="office@example.com&#10;accounting@example.com">{{ old('emails.0', old('email')) }}</textarea>
                     </div>
 
                 </div>

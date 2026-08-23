@@ -8,8 +8,11 @@ use App\Models\RoutePlan;
 use App\Models\TransportReport;
 use App\Services\WarehouseInventoryService;
 use App\Services\ProtocolService;
+use App\Services\NotificationSettingsService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
@@ -41,7 +44,12 @@ class CollectionController extends Controller
     /**
      * Запис на ново събиране
      */
-    public function store(Request $request, Client $client)
+    public function store(
+        Request $request,
+        Client $client,
+        ProtocolService $protocols,
+        NotificationSettingsService $notificationSettings
+    )
     {
         $validated = $request->validate([
             'collection_date' => 'required|date',
@@ -125,6 +133,8 @@ class CollectionController extends Controller
 
         ]);
 
+        $emailNotice = $this->sendCollectionDocument($collection, $protocols, $notificationSettings);
+
         /*
         |--------------------------------------------------------------------------
         | Ако събирането е част от маршрут
@@ -155,7 +165,7 @@ class CollectionController extends Controller
                         ->route('routes.drive', $route)
                         ->with(
                             'success',
-                            'Събирането беше записано успешно.'
+                            'Събирането беше записано успешно.' . $emailNotice
                         );
                 }
 
@@ -167,7 +177,7 @@ class CollectionController extends Controller
                     ->route('routes.show', $route)
                     ->with(
                         'success',
-                        '🎉 Маршрутът беше завършен успешно.'
+                        '🎉 Маршрутът беше завършен успешно.' . $emailNotice
                     );
             }
         }
@@ -182,8 +192,66 @@ class CollectionController extends Controller
             ->route('collections.index', $client)
             ->with(
                 'success',
-                'Събирането беше добавено успешно.'
+                'Събирането беше добавено успешно.' . $emailNotice
             );
+    }
+
+    private function sendCollectionDocument(
+        Collection $collection,
+        ProtocolService $protocols,
+        NotificationSettingsService $notificationSettings
+    ): string {
+        try {
+            $protocol = $protocols->generate($collection);
+            $collection->load('client.emailRecipients');
+
+            $adminRecipients = $notificationSettings->recipientsFor(NotificationSettingsService::COLLECTION_COMPLETED);
+            $clientRecipients = $collection->client->emailRecipients
+                ->pluck('email')
+                ->filter(fn ($email) => filter_var($email, FILTER_VALIDATE_EMAIL))
+                ->map(fn ($email) => strtolower(trim($email)))
+                ->unique()
+                ->values()
+                ->all();
+            $recipients = collect($adminRecipients)->merge($clientRecipients)->unique()->values()->all();
+
+            if ($recipients === []) {
+                Log::warning('Collection document was not emailed because no valid recipients are configured.', [
+                    'collection_id' => $collection->id,
+                    'client_id' => $collection->client_id,
+                ]);
+
+                return ' Документът е генериран, но няма валидни email получатели.';
+            }
+
+            Mail::to($recipients)->send(new \App\Mail\WasteCollectionProtocolMail($protocol));
+
+            $protocol->forceFill([
+                'email_sent_to_owner' => $adminRecipients !== [],
+                'email_sent_to_client' => $clientRecipients !== [],
+                'sent_at' => now(),
+            ])->save();
+
+            if ($clientRecipients === []) {
+                Log::info('Collection document emailed only to administrators because client has no configured email.', [
+                    'collection_id' => $collection->id,
+                    'client_id' => $collection->client_id,
+                    'recipients' => $adminRecipients,
+                ]);
+
+                return ' Документът е изпратен само до Admin получателите, защото обектът няма email.';
+            }
+
+            return ' Документът е изпратен по email.';
+        } catch (\Throwable $exception) {
+            Log::error('Collection document email failed after the collection was saved.', [
+                'collection_id' => $collection->id,
+                'client_id' => $collection->client_id,
+                'exception' => $exception,
+            ]);
+
+            return ' Документът не беше изпратен по email; грешката е записана в системния log.';
+        }
     }
 
     /**

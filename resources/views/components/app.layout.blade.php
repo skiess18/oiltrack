@@ -96,9 +96,19 @@
 
             @endif
 
-            @if(Auth::user()->isAdmin())
+@if(Auth::user()->isAdmin())
 
-            <a
+<a
+    href="{{ route('settings.email-notifications.edit') }}"
+    class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 {{ request()->routeIs('settings.*') ? 'bg-blue-600 shadow-lg' : 'hover:bg-slate-800' }}">
+
+    <span class="text-xl">✉️</span>
+
+    <span class="font-medium">Email настройки</span>
+
+</a>
+
+<a
                 href="{{ route('users.index') }}"
                 class="flex items-center gap-3 px-7 py-4 rounded-r-xl transition {{ request()->routeIs('users.*') ? 'bg-slate-800 border-r-4 border-blue-500' : 'hover:bg-slate-800' }}">
 

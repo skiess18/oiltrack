@@ -100,8 +100,9 @@
                     </div>
 
                     <div>
-                        <label class="block font-semibold mb-2">Email</label>
-                        <input type="email" name="email" value="{{ old('email', $client->email) }}" class="w-full border rounded-xl p-3" required>
+                        <label class="block font-semibold mb-2">Email адреси за документи</label>
+                        <p class="mb-2 text-sm text-slate-500">По един адрес на ред. Полето може да остане празно.</p>
+                        <textarea name="emails[]" rows="3" class="w-full border rounded-xl p-3">{{ old('emails.0', $client->emailRecipients->pluck('email')->implode("\n")) }}</textarea>
                     </div>
 
                     <div>

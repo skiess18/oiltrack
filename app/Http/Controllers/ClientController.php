@@ -66,7 +66,9 @@ class ClientController extends Controller
             'phone' => 'required|string|max:30',
             'contact_person' => 'nullable|string|max:255',
             'representative' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
+            'email' => 'nullable|email|max:255',
+            'emails' => 'nullable|array',
+            'emails.*' => 'nullable|email|max:255',
             'capacity' => 'nullable|integer|min:0',
             'notes' => 'nullable|string',
             'company_name' => 'required|string|max:255',
@@ -77,7 +79,11 @@ class ClientController extends Controller
 
         ]);
 
-        Client::create($validated);
+        $client = Client::create($validated);
+        $client->syncEmailRecipients(array_filter([
+            $validated['email'] ?? null,
+            ...($validated['emails'] ?? []),
+        ]));
 
         return redirect()
             ->route('clients.index')
@@ -136,7 +142,9 @@ class ClientController extends Controller
             'phone' => 'required|string|max:30',
             'contact_person' => 'nullable|string|max:255',
             'representative' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
+            'email' => 'nullable|email|max:255',
+            'emails' => 'nullable|array',
+            'emails.*' => 'nullable|email|max:255',
             'capacity' => 'nullable|integer|min:0',
             'notes' => 'nullable|string',
             'company_name' => 'required|string|max:255',
@@ -148,6 +156,10 @@ class ClientController extends Controller
         ]);
 
         $client->update($validated);
+        $client->syncEmailRecipients(array_filter([
+            $validated['email'] ?? null,
+            ...($validated['emails'] ?? []),
+        ]));
 
         return redirect()
             ->route('clients.index')

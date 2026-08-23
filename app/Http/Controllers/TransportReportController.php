@@ -9,6 +9,7 @@ use App\Models\Collection;
 use App\Models\TransportReport;
 use App\Models\Vehicle;
 use App\Services\ProtocolService;
+use App\Services\NotificationSettingsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
@@ -86,7 +87,7 @@ class TransportReportController extends Controller
 
         return view('transport_reports.end', compact('report'));
     }
-        public function update(Request $request, ProtocolService $protocols)
+        public function update(Request $request, ProtocolService $protocols, NotificationSettingsService $settings)
 {
     $request->validate([
         'end_km'   => 'required|integer|min:0',
@@ -135,28 +136,32 @@ class TransportReportController extends Controller
     $totalLiters = $collections->sum('liters');
     $totalAmount = $collections->sum('total_price');
 
-    Mail::to('skiess18@gmail.com')
-    ->send(new TransportReportMail($report));
+    $transportRecipients = $settings->recipientsFor(NotificationSettingsService::TRANSPORT_REPORT);
+    if ($transportRecipients !== []) {
+        Mail::to($transportRecipients)->send(new TransportReportMail($report));
+    }
 
-Mail::to('skiess18@gmail.com')
-    ->send(new AccountingReportMail(
-        $report,
-        $collections,
-        $totalLiters,
-        $totalAmount
-    ));
+    $documentRecipients = $settings->recipientsFor(NotificationSettingsService::END_OF_DAY_DOCUMENTS);
+    if ($documentRecipients !== []) {
+        Mail::to($documentRecipients)->send(new AccountingReportMail(
+            $report,
+            $collections,
+            $totalLiters,
+            $totalAmount
+        ));
+    }
 
     foreach ($collections->unique('client_id') as $collection) {
         $protocol = $protocols->generate($collection);
 
-        Mail::to('bul_ros_group@abv.bg')
-            ->send(new WasteCollectionProtocolMail($protocol));
-        $protocol->email_sent_to_owner = true;
+        $collection->load('client.emailRecipients');
+        $clientRecipients = $collection->client->emailRecipients->pluck('email')->all();
+        $recipients = collect($documentRecipients)->merge($clientRecipients)->unique()->values()->all();
 
-        if ($collection->client->email) {
-            Mail::to($collection->client->email)
-                ->send(new WasteCollectionProtocolMail($protocol, true));
-            $protocol->email_sent_to_client = true;
+        if ($recipients !== []) {
+            Mail::to($recipients)->send(new WasteCollectionProtocolMail($protocol));
+            $protocol->email_sent_to_owner = $documentRecipients !== [];
+            $protocol->email_sent_to_client = $clientRecipients !== [];
         }
         $protocol->sent_at = now();
         $protocol->save();

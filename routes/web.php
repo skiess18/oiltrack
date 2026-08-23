@@ -12,6 +12,7 @@ use App\Http\Controllers\TransportReportController;
 use App\Http\Controllers\StatisticsController;
 use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\ProtocolController;
+use App\Http\Controllers\NotificationSettingsController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -52,6 +53,11 @@ Route::middleware(['auth'])->group(function () {
         */
 
         Route::resource('users', UserController::class);
+
+        Route::get('/settings/email-notifications', [NotificationSettingsController::class, 'edit'])
+            ->name('settings.email-notifications.edit');
+        Route::put('/settings/email-notifications', [NotificationSettingsController::class, 'update'])
+            ->name('settings.email-notifications.update');
 
         /*
         |--------------------------------------------------------------------------

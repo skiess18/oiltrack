@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Mail\WasteCollectionProtocolMail;
 use App\Models\Protocol;
 use App\Services\ProtocolService;
+use App\Services\NotificationSettingsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -38,14 +39,18 @@ class ProtocolController extends Controller
         return Storage::disk('public')->download($protocol->pdf_path, 'protocol-' . $protocol->id . '.pdf');
     }
 
-    public function resend(Protocol $protocol, ProtocolService $service)
+    public function resend(Protocol $protocol, ProtocolService $service, NotificationSettingsService $settings)
     {
         $protocol = $service->generate($protocol->collection);
-        Mail::to('bul_ros_group@abv.bg')->send(new WasteCollectionProtocolMail($protocol));
-        $protocol->email_sent_to_owner = true;
-        if ($protocol->client->email) {
-            Mail::to($protocol->client->email)->send(new WasteCollectionProtocolMail($protocol, true));
-            $protocol->email_sent_to_client = true;
+        $protocol->load('client.emailRecipients');
+        $adminRecipients = $settings->recipientsFor(NotificationSettingsService::COLLECTION_COMPLETED);
+        $clientRecipients = $protocol->client->emailRecipients->pluck('email')->all();
+        $recipients = collect($adminRecipients)->merge($clientRecipients)->unique()->values()->all();
+
+        if ($recipients !== []) {
+            Mail::to($recipients)->send(new WasteCollectionProtocolMail($protocol));
+            $protocol->email_sent_to_owner = $adminRecipients !== [];
+            $protocol->email_sent_to_client = $clientRecipients !== [];
         }
         $protocol->sent_at = now();
         $protocol->save();

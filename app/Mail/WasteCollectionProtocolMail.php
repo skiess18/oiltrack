@@ -14,15 +14,18 @@ class WasteCollectionProtocolMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public function __construct(public Protocol $protocol, public bool $forClient = false)
+    public function __construct(public Protocol $protocol)
     {
+        $this->protocol->loadMissing([
+            'collection.client.emailRecipients',
+            'collection.user',
+            'collection.transportReport.vehicle.assignedDriver',
+        ]);
     }
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: $this->forClient
-            ? 'Протокол за предаване на отпадъчни масла'
-            : 'Протокол за събиране на отпадъци');
+        return new Envelope(subject: 'Документ за извършено събиране #' . $this->protocol->id);
     }
 
     public function content(): Content
@@ -32,8 +35,16 @@ class WasteCollectionProtocolMail extends Mailable
 
     public function attachments(): array
     {
-        return [Attachment::fromStorageDisk('public', $this->protocol->pdf_path)
-            ->as('waste-collection-protocol-' . $this->protocol->collection_id . '.pdf')
+        $attachments = [Attachment::fromStorageDisk('public', $this->protocol->pdf_path)
+            ->as('protocol-' . $this->protocol->collection_id . '.pdf')
             ->withMime('application/pdf')];
+
+        if ($this->protocol->collection?->cash_receipt_path) {
+            $attachments[] = Attachment::fromStorageDisk('public', $this->protocol->collection->cash_receipt_path)
+                ->as('cash-receipt-' . $this->protocol->collection_id . '.pdf')
+                ->withMime('application/pdf');
+        }
+
+        return $attachments;
     }
 }
